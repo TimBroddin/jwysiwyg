@@ -107,48 +107,6 @@
 				tooltip: "Header 3"
 			},
 
-			highlight: {
-				tooltip:     "Highlight",
-				className:   "highlight",
-				groupIndex:  1,
-				visible:     false,
-				css: {
-					backgroundColor: "rgb(255, 255, 102)"
-				},
-				exec: function () {
-					var command, node, selection, args;
-
-					if ($.browser.msie || $.browser.safari) {
-						command = "backcolor";
-					} else {
-						command = "hilitecolor";
-					}
-
-					if ($.browser.msie) {
-						node = this.getInternalRange().parentElement();
-					} else {
-						selection = this.getInternalSelection();
-						node = selection.extentNode || selection.focusNode;
-
-						while (node.style === undefined) {
-							node = node.parentNode;
-							if (node.tagName && node.tagName.toLowerCase() === "body") {
-								return;
-							}
-						}
-					}
-
-					if (node.style.backgroundColor === "rgb(255, 255, 102)" ||
-							node.style.backgroundColor === "#ffff66") {
-						args = "#ffffff";
-					} else {
-						args = "#ffff66";
-					}
-
-					this.editorDoc.execCommand(command, false, args);
-				}
-			},
-
 			html: {
 				groupIndex: 10,
 				visible: false,
@@ -469,9 +427,8 @@
 			formHeight: 270,
 			formWidth: 440,
 			iFrameClass: null,
-			initialContent: "<p>Initial content</p>",
+			initialContent: "",
 			maxHeight: 10000,			// see autoGrow
-			maxLength: 0,
 			messages: {
 				nonSelection: "Select the text you wish to link"
 			},
@@ -483,14 +440,6 @@
 			rmUnwantedBr: true,			// http://code.google.com/p/jwysiwyg/issues/detail?id=11
 			tableFiller: "Lorem ipsum",
 			initialMinHeight: null,
-
-			controlImage: {
-				forceRelativeUrls: false
-			},
-
-			controlLink: {
-				forceRelativeUrls: false
-			},
 
 			plugins: { // placeholder for plugins settings
 				autoload: false,
@@ -517,14 +466,13 @@
 			"visible"
 		];
 
-		this.editor			= null;
-		this.editorDoc		= null;
-		this.element		= null;
-		this.options		= {};
-		this.original		= null;
-		this.savedRange		= null;
-		this.timers			= [];
-		this.validKeyCodes	= [8, 9, 13, 16, 17, 18, 19, 20, 27, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46];
+		this.editor		= null;
+		this.editorDoc	= null;
+		this.element	= null;
+		this.options	= {};
+		this.original	= null;
+		this.savedRange	= null;
+		this.timers		= [];
 
 		this.dom		= { // DOM related properties and methods
 			ie:		{
@@ -1302,14 +1250,6 @@
 				}
 			}
 
-			if (self.options.maxLength > 0) {
-				$(self.editorDoc).keydown(function (event) {
-					if ($(self.editorDoc).text().length >= self.options.maxLength && $.inArray(event.which, self.validKeyCodes) == -1) {
-						event.preventDefault();
-					}
-				})
-			}
-
 			$.each(self.options.events, function (key, handler) {
 				$(self.editorDoc).bind(key + ".wysiwyg", handler);
 			});
@@ -1329,6 +1269,7 @@
 			}
 
 			$(self.editorDoc.body).addClass("wysiwyg");
+
 			if (self.options.events && self.options.events.save) {
 				saveHandler = self.options.events.save;
 
@@ -1366,7 +1307,7 @@
 		};
 
 		this.insertHtml = function (szHTML) {
-			var img, range;
+			var img;
 
 			if (!szHTML || szHTML.length === 0) {
 				return this;
@@ -1379,23 +1320,16 @@
 				if (img) {
 					$(img).replaceWith(szHTML);
 				}
-			} else {	
-				if ($.browser.mozilla) {
-					range = this.getInternalRange();
-
-					range.deleteContents();
-					range.insertNode($(szHTML).get(0));
-				} else {
-					if (!this.editorDoc.execCommand("insertHTML", false, szHTML)) {
-						this.editor.focus();
-						/* :TODO: place caret at the end
-						if (window.getSelection) {
-						} else {
-						}
-						this.editor.focus();
-						*/
-						this.editorDoc.execCommand("insertHTML", false, szHTML);
+			} else {			
+				if (!this.editorDoc.execCommand("insertHTML", false, szHTML)) {
+					this.editor.focus();
+					/* :TODO: place caret at the end
+					if (window.getSelection) {
+					} else {
 					}
+					this.editor.focus();
+					*/
+					this.editorDoc.execCommand("insertHTML", false, szHTML);
 				}
 			}
 
